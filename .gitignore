@@ -1,0 +1,13 @@
+Logs/*.log
+.DS_Store
+settings.json
+C*.md
+.C*
+Reports/*.json
+Reports/*.md
+Reports/PowerShell-Code-Review.md
+Test*/*
+Hydration-Summary.md
+*.code-workspace
+Test-ModuleConfigurations.ps1
+settingsDelete.json

@@ -1,0 +1,63 @@
+name: Publish to PSGallery
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'IntuneHydrationKit.psd1'
+      - 'IntuneHydrationKit.psm1'
+      - 'Public/**'
+      - 'Private/**'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check version bump
+        shell: pwsh
+        id: check_version
+        run: |
+          $moduleName = 'IntuneHydrationKit'
+          $manifestPath = './IntuneHydrationKit.psd1'
+
+          # Get version from manifest
+          [version]$LocalVersion = (Import-PowerShellDataFile -Path $manifestPath).ModuleVersion
+          Write-Host "Local version: $LocalVersion"
+
+          # Try to get gallery version (may not exist yet)
+          try {
+              $galleryModule = Find-Module -Name $moduleName -ErrorAction Stop
+              [version]$GalleryVersion = $galleryModule.Version
+              Write-Host "Gallery version: $GalleryVersion"
+          }
+          catch {
+              # Module not yet published to gallery
+              Write-Host "Module not found in PSGallery - will publish as new module"
+              [version]$GalleryVersion = '0.0.0'
+          }
+
+          $shouldPublish = $LocalVersion -gt $GalleryVersion
+
+          if ($shouldPublish) {
+              Write-Host "✅ Version bump detected ($GalleryVersion -> $LocalVersion) - will publish"
+              "should_publish=true" >> $env:GITHUB_OUTPUT
+              "version=$LocalVersion" >> $env:GITHUB_OUTPUT
+          } else {
+              Write-Host "⏭️ No version bump (local: $LocalVersion, gallery: $GalleryVersion) - skipping publish"
+              "should_publish=false" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Publish to PSGallery
+        shell: pwsh
+        if: steps.check_version.outputs.should_publish == 'true'
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          $modulePath = $PWD.Path
+          Write-Host "Publishing IntuneHydrationKit v${{ steps.check_version.outputs.version }} to PSGallery..."
+          Publish-Module -Path $modulePath -NuGetApiKey $env:PSGALLERY_API_KEY -Verbose
+          Write-Host "✅ Successfully published to PSGallery"
