@@ -87,7 +87,7 @@ function Connect-IntuneHydration {
         $script:HydrationState.TenantId = $TenantId
         $script:HydrationState.Environment = $Environment
 
-        Write-Host "Successfully connected to tenant: $TenantId ($Environment)"
+        Write-Host "Successfully connected to tenant: $(Get-ObfuscatedTenantId -TenantId $TenantId) ($Environment)"
     } catch {
         Write-Error "Failed to connect to Microsoft Graph: $_"
         throw

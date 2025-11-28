@@ -83,7 +83,9 @@ $publicFunctions = @(
     'Get-ResultSummary',
     'Get-GraphErrorMessage',
     # Safety helpers (used by orchestrator for deletion safety checks)
-    'Test-HydrationKitObject'
+    'Test-HydrationKitObject',
+    # Utility helpers
+    'Get-ObfuscatedTenantId'
 )
 
 # Export functions

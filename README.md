@@ -1,7 +1,7 @@
 # Intune Hydration Kit
 
 <p align="center">
-  <img src="IHKLogo.png" alt="Intune Hydration Kit Logo" width="300">
+  <img src="Media/IHKLogo.png" alt="Intune Hydration Kit Logo" width="300">
 </p>
 
 <p align="center">
@@ -9,8 +9,6 @@
 </p>
 
 <p align="center">
-  <a href="https://www.powershellgallery.com/packages/IntuneHydrationKit"><img src="https://img.shields.io/powershellgallery/v/IntuneHydrationKit?label=PSGallery&color=blue" alt="PSGallery Version"></a>
-  <a href="https://www.powershellgallery.com/packages/IntuneHydrationKit"><img src="https://img.shields.io/powershellgallery/dt/IntuneHydrationKit?label=Downloads&color=green" alt="PSGallery Downloads"></a>
   <a href="https://github.com/jorgeasaurus/Intune-Hydration-Kit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/jorgeasaurus/Intune-Hydration-Kit" alt="License"></a>
 </p>
 
@@ -27,6 +25,10 @@
 ## Overview
 
 The Intune Hydration Kit is a PowerShell module that bootstraps Microsoft Intune tenants with production-ready configurations. It automatically downloads the latest [OpenIntuneBaseline](https://github.com/SkipToTheEndpoint/OpenIntuneBaseline) policies and deploys them alongside compliance policies, dynamic groups, and more—turning hours of manual configuration into a single command.
+
+<p align="center">
+  <img src="Media/SampleOutput.png" alt="Sample Output" width="800">
+</p>
 
 ### What Gets Created
 
@@ -105,14 +107,6 @@ The authenticated user/app needs these Microsoft Graph permissions:
 ---
 
 ## Installation
-
-### Option 1: Install from PSGallery (Recommended)
-
-```powershell
-Install-Module -Name IntuneHydrationKit -Scope CurrentUser
-```
-
-### Option 2: Clone from GitHub
 
 ```powershell
 git clone https://github.com/jorgeasaurus/Intune-Hydration-Kit.git

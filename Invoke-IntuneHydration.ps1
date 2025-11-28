@@ -91,7 +91,7 @@ try {
     Initialize-HydrationLogging -LogPath $logsPath -EnableVerbose:($VerbosePreference -eq 'Continue')
 
     Write-HydrationLog -Message "=== Intune Hydration Kit Started ===" -Level Info
-    Write-HydrationLog -Message "Loaded settings for tenant: $($settings.tenant.tenantId)" -Level Info
+    Write-HydrationLog -Message "Loaded settings for tenant: $(Get-ObfuscatedTenantId -TenantId $settings.tenant.tenantId)" -Level Info
 
     if ($WhatIfPreference) {
         Write-HydrationLog -Message "Running in DRY-RUN mode - no changes will be made" -Level Warning
