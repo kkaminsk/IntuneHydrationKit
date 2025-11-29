@@ -371,6 +371,38 @@ Intune-Hydration-Kit/
 
 ---
 
+## Changelog
+
+### v0.1.4
+- Added `DeviceManagementScripts.ReadWrite.All` scope for custom compliance scripts (required after Microsoft Graph API permission changes)
+- Added `Application.Read.All` scope for Conditional Access policies targeting specific applications
+- Added `Policy.Read.All` scope for querying existing Conditional Access policies
+- Updated prerequisite checks to validate Graph permission scopes
+- Removed MDM authority check from prerequisites
+
+### v0.1.3
+- Fixed image paths in README.md
+
+### v0.1.2
+- Refactored code structure for improved readability and maintainability
+
+### v0.1.1
+- Updated module manifest with correct author and company details
+
+### v0.1.0 - Initial Release
+- OpenIntuneBaseline integration (auto-downloads latest policies)
+- Compliance policy templates (Windows, macOS, iOS, Android, Linux)
+- App protection policies (Android/iOS MAM)
+- Dynamic groups and device filters
+- Enrollment profiles (Autopilot, ESP)
+- Conditional Access starter pack (always created disabled)
+- Safe deletion (only removes kit-created objects)
+- Multi-cloud support (Global, USGov, USGovDoD, Germany, China)
+- WhatIf/dry-run mode
+- Detailed logging and reporting
+
+---
+
 ## Acknowledgments
 
 - [OpenIntuneBaseline](https://github.com/SkipToTheEndpoint/OpenIntuneBaseline) by SkipToTheEndpoint - Community-driven Intune security baselines
