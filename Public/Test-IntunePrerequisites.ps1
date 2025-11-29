@@ -3,7 +3,7 @@ function Test-IntunePrerequisites {
     .SYNOPSIS
         Validates Intune tenant prerequisites
     .DESCRIPTION
-        Checks for Intune license availability and MDM authority configuration
+        Checks for Intune license availability and required Microsoft Graph permission scopes
     .EXAMPLE
         Test-IntunePrerequisites
     #>
@@ -13,6 +13,20 @@ function Test-IntunePrerequisites {
     Write-Host "Validating Intune prerequisites..."
 
     $issues = @()
+
+    # Required scopes from Connect-IntuneHydration
+    $requiredScopes = @(
+        "DeviceManagementConfiguration.ReadWrite.All",
+        "DeviceManagementServiceConfig.ReadWrite.All",
+        "DeviceManagementManagedDevices.ReadWrite.All",
+        "DeviceManagementScripts.ReadWrite.All",
+        "DeviceManagementApps.ReadWrite.All",
+        "Group.ReadWrite.All",
+        "Policy.Read.All",
+        "Policy.ReadWrite.ConditionalAccess",
+        "Application.Read.All",
+        "Directory.ReadWrite.All"
+    )
 
     try {
         # Check organization info and licenses
@@ -48,19 +62,26 @@ function Test-IntunePrerequisites {
             $issues += "No active Intune license found. Please ensure Intune is licensed for this tenant."
         }
 
-        # Check MDM Authority
-        $mdmPolicies = Invoke-MgGraphRequest -Method GET -Uri "beta/policies/mobileDeviceManagementPolicies?`$select=displayName,id,isValid" -ErrorAction Stop
+        # Check for required permission scopes
+        $context = Get-MgContext
+        if ($null -eq $context) {
+            $issues += "Not connected to Microsoft Graph. Please run Connect-IntuneHydration first."
+        } else {
+            $currentScopes = $context.Scopes
+            $missingScopes = @()
 
-        $intuneMdm = $mdmPolicies.value | Where-Object { $_.displayName -eq 'Microsoft Intune' -or $_.displayName -eq 'Microsoft Intune Enrollment' }
+            foreach ($scope in $requiredScopes) {
+                if ($currentScopes -notcontains $scope) {
+                    $missingScopes += $scope
+                }
+            }
 
-        if (-not $intuneMdm) {
-            $issues += "MDM Authority is not configured. Please set up Microsoft Intune as the MDM authority."
-        }
-        elseif ($intuneMdm | Where-Object { $_.isValid -eq $false }) {
-            $issues += "Microsoft Intune MDM policy exists but is not valid. Please verify MDM authority configuration."
-        }
-        else {
-            Write-Host "MDM Authority: Microsoft Intune (OK)"
+            if ($missingScopes.Count -gt 0) {
+                $issues += "Missing required permission scopes: $($missingScopes -join ', ')"
+                Write-Warning "Missing scopes detected. Please reconnect using Connect-IntuneHydration."
+            } else {
+                Write-Host "All required permission scopes are present"
+            }
         }
 
         # Report results

@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/version-0.1.4-blue" alt="Version">
   <a href="https://github.com/jorgeasaurus/Intune-Hydration-Kit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/jorgeasaurus/Intune-Hydration-Kit" alt="License"></a>
 </p>
 
@@ -100,8 +101,12 @@ The authenticated user/app needs these Microsoft Graph permissions:
 - `DeviceManagementConfiguration.ReadWrite.All`
 - `DeviceManagementServiceConfig.ReadWrite.All`
 - `DeviceManagementManagedDevices.ReadWrite.All`
+- `DeviceManagementScripts.ReadWrite.All`
+- `DeviceManagementApps.ReadWrite.All`
 - `Group.ReadWrite.All`
+- `Policy.Read.All`
 - `Policy.ReadWrite.ConditionalAccess`
+- `Application.Read.All`
 - `Directory.ReadWrite.All`
 
 ---
