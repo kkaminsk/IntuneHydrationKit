@@ -8,6 +8,8 @@
         "mode": "interactive",
         "clientId": null,
         "clientSecret": null,
+        "certificateThumbprint": null,
+        "certificateSubject": null,
         "environment": "Global"
     },
     "options": {

@@ -17,6 +17,7 @@
   <a href="#installation">Installation</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#configuration">Configuration</a> •
+  <a href="#app-registration-setup">App Registration</a> •
   <a href="#safety-features">Safety Features</a> •
   <a href="#troubleshooting">Troubleshooting</a>
 </p>
@@ -96,6 +97,11 @@ Install-Module Microsoft.Graph.Authentication -Scope CurrentUser
 
 > **Note:** This module uses `Invoke-MgGraphRequest` for all Graph API calls, so only the Authentication module is required.
 
+For automated app registration setup with certificate authentication, you'll also need:
+```powershell
+Install-Module Microsoft.Graph.Applications -Scope CurrentUser
+```
+
 ### Required Permissions
 The authenticated user/app needs these Microsoft Graph permissions:
 - `DeviceManagementConfiguration.ReadWrite.All`
@@ -172,11 +178,12 @@ Edit `settings.json` with your tenant details:
 
 #### Authentication Modes
 
-The kit supports two authentication methods:
+The kit supports three authentication methods:
 
 | Method | Use Case | Requirements |
 |--------|----------|--------------|
 | Interactive | Manual runs, testing | User with required permissions |
+| Certificate | Automation, CI/CD (recommended) | App registration with certificate |
 | Client Secret | Automation, CI/CD | App registration with client secret |
 
 **Interactive (recommended for testing):**
@@ -187,6 +194,19 @@ The kit supports two authentication methods:
 }
 ```
 Uses browser-based login. Best for manual runs and initial testing.
+
+**Certificate (recommended for automation):**
+```json
+"authentication": {
+    "mode": "certificate",
+    "clientId": "00000000-0000-0000-0000-000000000000",
+    "certificateThumbprint": "ABC123DEF456...",
+    "environment": "Global"
+}
+```
+Uses certificate-based authentication. More secure than client secrets for unattended runs.
+
+> **Tip:** Use the included `Setup-IntuneHydrationApp.ps1` script to automatically create the app registration and certificate. See [App Registration Setup](#app-registration-setup) below.
 
 **Client Secret (for automation):**
 ```json
@@ -250,6 +270,92 @@ Enable or disable specific configuration types:
     "conditionalAccess": true
 }
 ```
+
+---
+
+## App Registration Setup
+
+For automated/unattended runs, you need an Azure AD app registration with the required permissions. The included `Setup-IntuneHydrationApp.ps1` script automates this entire process.
+
+### What the Setup Script Does
+
+1. Connects to Microsoft Graph with admin scopes (interactive)
+2. Creates the application registration (or uses existing)
+3. Creates the service principal for the application
+4. Generates a self-signed certificate (or uses an existing one)
+5. Attaches the certificate to the application
+6. Configures all required Microsoft Graph API permissions
+7. Grants admin consent for all permissions
+8. Verifies the connection using certificate authentication
+9. Outputs the settings.json configuration values
+
+### Quick Setup
+
+```powershell
+# Basic setup with new certificate
+./Setup-IntuneHydrationApp.ps1 -TenantId "00000000-0000-0000-0000-000000000000"
+```
+
+### Setup Script Parameters
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `-TenantId` | **(Required)** Azure AD tenant ID (GUID) | - |
+| `-ApplicationName` | Display name for the app registration | `Intune-Hydration-Kit` |
+| `-CertificateSubject` | Subject name for the certificate | `CN=Intune-Hydration-Kit` |
+| `-CertificateValidityMonths` | Certificate validity period (1-60 months) | `24` |
+| `-ExistingCertificateThumbprint` | Use an existing certificate instead of generating new | - |
+| `-NonExportable` | Create certificate with non-exportable private key | `false` |
+| `-ExportCertificate` | Export certificate to .cer and .pfx files | `false` |
+| `-Force` | Skip confirmation prompts | `false` |
+
+### Setup Examples
+
+```powershell
+# Basic setup - creates app and certificate interactively
+./Setup-IntuneHydrationApp.ps1 -TenantId "your-tenant-id"
+
+# Non-exportable certificate for enhanced security
+./Setup-IntuneHydrationApp.ps1 -TenantId "your-tenant-id" -NonExportable -Force
+
+# Use an existing certificate
+./Setup-IntuneHydrationApp.ps1 -TenantId "your-tenant-id" -ExistingCertificateThumbprint "ABC123..."
+
+# Export certificate files for backup or deployment to other machines
+./Setup-IntuneHydrationApp.ps1 -TenantId "your-tenant-id" -ExportCertificate
+
+# Custom app name and certificate validity
+./Setup-IntuneHydrationApp.ps1 -TenantId "your-tenant-id" `
+    -ApplicationName "My-Intune-Automation" `
+    -CertificateSubject "CN=My-Intune-Automation" `
+    -CertificateValidityMonths 12
+```
+
+### After Setup
+
+The script outputs the exact JSON configuration to add to your `settings.json`:
+
+```json
+{
+    "tenant": {
+        "tenantId": "your-tenant-id"
+    },
+    "authentication": {
+        "mode": "certificate",
+        "clientId": "app-client-id-from-output",
+        "certificateThumbprint": "certificate-thumbprint-from-output",
+        "environment": "Global"
+    }
+}
+```
+
+### Certificate Storage
+
+- Certificates are stored in `Cert:\CurrentUser\My` by default
+- Use `-ExportCertificate` to export .cer (public) and .pfx (private) files
+- For deployment to other machines, export the .pfx file and import it to the target machine's certificate store
+
+> **Security Note:** If using `-NonExportable`, the certificate private key cannot be exported or backed up. This provides stronger security but means the certificate cannot be moved to another machine.
 
 ---
 
@@ -351,6 +457,7 @@ $VerbosePreference = "Continue"
 ```
 Intune-Hydration-Kit/
 ├── Invoke-IntuneHydration.ps1    # Main orchestrator script
+├── Setup-IntuneHydrationApp.ps1  # App registration setup script
 ├── IntuneHydrationKit.psd1       # Module manifest
 ├── IntuneHydrationKit.psm1       # Module loader
 ├── settings.example.json          # Example configuration

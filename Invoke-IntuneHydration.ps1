@@ -121,12 +121,33 @@ try {
         $authParams['Environment'] = $settings.authentication.environment
     }
 
-    if ($settings.authentication.mode -eq 'clientSecret') {
-        $authParams['ClientId'] = $settings.authentication.clientId
-        $authParams['ClientSecret'] = $settings.authentication.clientSecret | ConvertTo-SecureString -AsPlainText -Force
-    }
-    else {
-        $authParams['Interactive'] = $true
+    # Determine authentication mode
+    switch ($settings.authentication.mode) {
+        'clientSecret' {
+            Write-HydrationLog -Message "Using client secret authentication" -Level Info
+            $authParams['ClientId'] = $settings.authentication.clientId
+            $authParams['ClientSecret'] = $settings.authentication.clientSecret | ConvertTo-SecureString -AsPlainText -Force
+        }
+        'certificate' {
+            Write-HydrationLog -Message "Using certificate authentication" -Level Info
+            $authParams['ClientId'] = $settings.authentication.clientId
+
+            # Support both thumbprint and subject-based certificate lookup
+            if ($settings.authentication.certificateThumbprint) {
+                $authParams['CertificateThumbprint'] = $settings.authentication.certificateThumbprint
+            }
+            elseif ($settings.authentication.certificateSubject) {
+                $authParams['CertificateSubject'] = $settings.authentication.certificateSubject
+            }
+            else {
+                throw "Certificate authentication requires either 'certificateThumbprint' or 'certificateSubject' in settings."
+            }
+        }
+        default {
+            # Interactive authentication (default)
+            Write-HydrationLog -Message "Using interactive authentication" -Level Info
+            $authParams['Interactive'] = $true
+        }
     }
 
     # Always connect to Graph API (needed for dry-run to check existing policies)
