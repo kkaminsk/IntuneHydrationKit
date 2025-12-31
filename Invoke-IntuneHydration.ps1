@@ -306,8 +306,26 @@ try {
         $allResults += $caResults
     }
 
-    # Step 11: Generate Summary Report
-    Write-HydrationLog -Message "Step 11: Generating Summary Report" -Level Info
+    # Step 11: Windows 365 Provisioning Policies
+    if ($settings.imports.w365ProvisioningPolicies) {
+        $stepAction = if ($RemoveExisting) { "Deleting" } else { "Importing" }
+        Write-HydrationLog -Message "Step 11: $stepAction Windows 365 Provisioning Policies" -Level Info
+
+        $w365ProvResults = Import-IntuneW365ProvisioningPolicy -RemoveExisting:$RemoveExisting -WhatIf:$WhatIfPreference
+        $allResults += $w365ProvResults
+    }
+
+    # Step 12: Windows 365 User Settings
+    if ($settings.imports.w365UserSettings) {
+        $stepAction = if ($RemoveExisting) { "Deleting" } else { "Importing" }
+        Write-HydrationLog -Message "Step 12: $stepAction Windows 365 User Settings" -Level Info
+
+        $w365UserResults = Import-IntuneW365UserSettings -RemoveExisting:$RemoveExisting -WhatIf:$WhatIfPreference
+        $allResults += $w365UserResults
+    }
+
+    # Step 13: Generate Summary Report
+    Write-HydrationLog -Message "Step 13: Generating Summary Report" -Level Info
 
     $reportsPath = Join-Path -Path $moduleRoot -ChildPath $settings.reporting.outputPath
     if (-not (Test-Path -Path $reportsPath)) {

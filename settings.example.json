@@ -26,7 +26,9 @@
         "enrollmentProfiles": true,
         "dynamicGroups": true,
         "deviceFilters": true,
-        "conditionalAccess": true
+        "conditionalAccess": true,
+        "w365ProvisioningPolicies": false,
+        "w365UserSettings": false
     },
     "openIntuneBaseline": {
         "repoUrl": "https://github.com/SkipToTheEndpoint/OpenIntuneBaseline",

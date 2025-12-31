@@ -1,0 +1,11 @@
+{
+  "displayName": "W365 Standard User Settings",
+  "description": "Standard user experience settings for Windows 365 Cloud PCs.",
+  "localAdminEnabled": false,
+  "selfServiceEnabled": true,
+  "restorePointSetting": {
+    "frequencyType": "sixHours",
+    "userRestoreEnabled": true
+  },
+  "resetEnabled": true
+}

@@ -114,6 +114,22 @@ The authenticated user/app needs these Microsoft Graph permissions:
 - `Policy.ReadWrite.ConditionalAccess`
 - `Application.Read.All`
 - `Directory.ReadWrite.All`
+- `CloudPC.ReadWrite.All` (required for Windows 365 features)
+
+### Windows 365 Prerequisites
+
+To use the Windows 365 provisioning features, you also need:
+- **Windows 365 Enterprise or Business licenses** assigned to your tenant
+- **Azure AD (Entra ID) joined** device support configured
+- **CloudPC.ReadWrite.All** permission scope (included by default)
+
+Enable Windows 365 imports in your settings file:
+```json
+"imports": {
+    "w365ProvisioningPolicies": true,
+    "w365UserSettings": true
+}
+```
 
 ---
 

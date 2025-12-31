@@ -1,0 +1,21 @@
+{
+  "displayName": "W365 Standard - Azure AD Join",
+  "description": "Standard Cloud PC provisioning with Azure AD Join.",
+  "provisioningType": "dedicated",
+  "managedBy": "windows365",
+  "imageType": "gallery",
+  "imageDisplayName": "Windows 11 Enterprise + Microsoft 365 Apps 24H2",
+  "windowsSettings": {
+    "language": "en-US"
+  },
+  "domainJoinConfigurations": [
+    {
+      "type": "azureADJoin",
+      "regionName": "automatic"
+    }
+  ],
+  "enableSingleSignOn": true,
+  "microsoftManagedDesktop": {
+    "type": "notManaged"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "groups": [
+    {
+      "displayName": "Intune - All Cloud PCs",
+      "description": "All Windows 365 Cloud PC devices managed by Intune",
+      "membershipRule": "(device.deviceModel -eq \"Cloud PC\")"
+    },
+    {
+      "displayName": "Intune - Cloud PCs Windows 11",
+      "description": "All Windows 365 Cloud PC devices running Windows 11",
+      "membershipRule": "(device.deviceModel -eq \"Cloud PC\") and (device.deviceOSVersion -startsWith \"10.0.2\")"
+    }
+  ]
+}

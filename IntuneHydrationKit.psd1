@@ -45,6 +45,9 @@
         'Import-IntuneEnrollmentProfile',
         'Import-IntuneDeviceFilter',
         'Import-IntuneConditionalAccessPolicy',
+        # Windows 365 functions
+        'Import-IntuneW365ProvisioningPolicy',
+        'Import-IntuneW365UserSettings',
         # Helper functions
         'Initialize-HydrationLogging',
         'Write-HydrationLog',
