@@ -83,13 +83,9 @@ IntuneHydrationKit/
 │   │   └── CloudPC-Configuration-Profile.json     # New
 │   ├── DynamicGroups/
 │   │   └── CloudPC-Groups.json                    # New
-│   └── Windows365/
-│       ├── ProvisioningPolicies/
-│       │   ├── Standard-AzureADJoin.json          # New
-│       │   └── Standard-HybridJoin.json           # New
-│       └── UserSettings/
-│           ├── Standard-UserSettings.json         # New
-│           └── Restricted-UserSettings.json       # New
+│   └── W365/
+│       ├── ProvisioningPolicy.json                # Existing (populate with template)
+│       └── UserSettings.json                      # Existing (populate with template)
 ```
 
 ### Modified Files
@@ -115,7 +111,7 @@ Imports Windows 365 provisioning policies from JSON templates.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `TemplatePath` | String | No | Path to template folder (defaults to `Templates/Windows365/ProvisioningPolicies`) |
+| `TemplatePath` | String | No | Path to template file (defaults to `Templates/W365/ProvisioningPolicy.json`) |
 | `RemoveExisting` | Switch | No | Remove existing hydration kit provisioning policies before import |
 
 #### Behavior
@@ -179,7 +175,7 @@ Imports Windows 365 user settings policies from JSON templates.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `TemplatePath` | String | No | Path to template folder (defaults to `Templates/Windows365/UserSettings`) |
+| `TemplatePath` | String | No | Path to template file (defaults to `Templates/W365/UserSettings.json`) |
 | `RemoveExisting` | Switch | No | Remove existing hydration kit user settings before import |
 
 #### Behavior
@@ -224,14 +220,18 @@ Import-IntuneW365UserSettings -RemoveExisting
 
 ## Template Specifications
 
-### Provisioning Policy Templates
+### Provisioning Policy Template
 
-#### Standard-AzureADJoin.json
+#### Templates/W365/ProvisioningPolicy.json
+
+This existing file should be populated with the provisioning policy template. The file currently exists but is empty.
+
+**Recommended Template Content:**
 
 ```json
 {
   "displayName": "W365 Standard - Azure AD Join",
-  "description": "Standard Cloud PC provisioning with Azure AD Join for knowledge workers.",
+  "description": "Standard Cloud PC provisioning with Azure AD Join. Imported by Intune-Hydration-Kit",
   "provisioningType": "dedicated",
   "managedBy": "windows365",
   "imageType": "gallery",
@@ -252,43 +252,32 @@ Import-IntuneW365UserSettings -RemoveExisting
 }
 ```
 
-#### Standard-HybridJoin.json
+**Template Properties:**
 
-```json
-{
-  "displayName": "W365 Standard - Hybrid Join",
-  "description": "Standard Cloud PC provisioning with Hybrid Azure AD Join for on-premises resource access.",
-  "provisioningType": "dedicated",
-  "managedBy": "windows365",
-  "imageType": "gallery",
-  "imageDisplayName": "Windows 11 Enterprise + Microsoft 365 Apps 24H2",
-  "windowsSettings": {
-    "language": "en-US"
-  },
-  "domainJoinConfigurations": [
-    {
-      "type": "hybridAzureADJoin",
-      "onPremisesConnectionId": "{{ON_PREMISES_CONNECTION_ID}}",
-      "regionName": "automatic"
-    }
-  ],
-  "enableSingleSignOn": true,
-  "microsoftManagedDesktop": {
-    "type": "notManaged"
-  }
-}
-```
+| Property | Value | Description |
+|----------|-------|-------------|
+| `provisioningType` | `dedicated` | Each user gets their own Cloud PC |
+| `managedBy` | `windows365` | Managed by Windows 365 service |
+| `imageType` | `gallery` | Uses Microsoft-provided gallery image |
+| `imageDisplayName` | `Windows 11 Enterprise + M365 Apps 24H2` | Resolved to `imageId` at runtime |
+| `domainJoinConfigurations.type` | `azureADJoin` | Azure AD Join (Entra ID) |
+| `regionName` | `automatic` | Azure selects optimal region |
+| `enableSingleSignOn` | `true` | Enable SSO for Cloud PC access |
 
-**Note:** Hybrid Join template requires placeholder substitution for `onPremisesConnectionId`.
+**Note:** For Hybrid Azure AD Join scenarios, modify `domainJoinConfigurations` to include `onPremisesConnectionId`.
 
-### User Settings Templates
+### User Settings Template
 
-#### Standard-UserSettings.json
+#### Templates/W365/UserSettings.json
+
+This existing file should be populated with the user settings template. The file currently exists but is empty.
+
+**Recommended Template Content:**
 
 ```json
 {
   "displayName": "W365 Standard User Settings",
-  "description": "Standard user settings with self-service capabilities enabled.",
+  "description": "Standard user experience settings for Windows 365 Cloud PCs. Imported by Intune-Hydration-Kit",
   "localAdminEnabled": false,
   "selfServiceEnabled": true,
   "restorePointSetting": {
@@ -299,12 +288,24 @@ Import-IntuneW365UserSettings -RemoveExisting
 }
 ```
 
-#### Restricted-UserSettings.json
+**Template Properties:**
+
+| Property | Value | Description |
+|----------|-------|-------------|
+| `localAdminEnabled` | `false` | Users are not local administrators |
+| `selfServiceEnabled` | `true` | Users can access self-service portal |
+| `restorePointSetting.frequencyType` | `sixHours` | Restore points created every 6 hours |
+| `restorePointSetting.userRestoreEnabled` | `true` | Users can restore their Cloud PC |
+| `resetEnabled` | `true` | Users can reset their Cloud PC |
+
+**Alternative: Restricted Settings**
+
+For regulated environments requiring tighter controls:
 
 ```json
 {
   "displayName": "W365 Restricted User Settings",
-  "description": "Restricted user settings with limited self-service for regulated environments.",
+  "description": "Restricted user settings for regulated environments. Imported by Intune-Hydration-Kit",
   "localAdminEnabled": false,
   "selfServiceEnabled": false,
   "restorePointSetting": {
@@ -580,7 +581,7 @@ function Import-IntuneW365ProvisioningPolicy {
 
     # Set default template path
     if (-not $TemplatePath) {
-        $TemplatePath = Join-Path $script:TemplatesPath 'Windows365/ProvisioningPolicies'
+        $TemplatePath = Join-Path $script:TemplatesPath 'W365/ProvisioningPolicy.json'
     }
 
     # Handle RemoveExisting
@@ -605,13 +606,13 @@ function Import-IntuneW365ProvisioningPolicy {
         return $results
     }
 
-    # Load templates
-    $templates = Get-HydrationTemplates -Path $TemplatePath -Recurse -ResourceType $resourceType
-
-    if ($templates.Count -eq 0) {
-        Write-HydrationLog -Message "No W365 provisioning policy templates found" -Level Warning
+    # Load template
+    if (-not (Test-Path $TemplatePath)) {
+        Write-HydrationLog -Message "W365 provisioning policy template not found: $TemplatePath" -Level Warning
         return $results
     }
+
+    $template = Get-Content -Path $TemplatePath -Raw -Encoding utf8 | ConvertFrom-Json
 
     # Get existing policies for comparison
     $existingPolicies = Get-AllGraphObjects -Endpoint $endpoint
@@ -619,52 +620,50 @@ function Import-IntuneW365ProvisioningPolicy {
     # Resolve gallery image ID if needed
     $galleryImages = Invoke-MgGraphRequest -Method GET -Uri 'beta/deviceManagement/virtualEndpoint/galleryImages'
 
-    foreach ($templateFile in $templates) {
-        $template = Get-Content -Path $templateFile.FullName -Raw -Encoding utf8 | ConvertFrom-Json
-        $displayName = $template.displayName
+    # Process template
+    $displayName = $template.displayName
 
-        # Check if already exists
-        $existing = $existingPolicies | Where-Object { $_.displayName -eq $displayName }
-        if ($existing) {
-            Write-HydrationLog -Message "Skipping '$displayName' - already exists" -Level Info
-            $results += New-HydrationResult -Name $displayName -Type $resourceType -Action 'Skipped' -Status 'Already exists'
-            continue
-        }
+    # Check if already exists
+    $existing = $existingPolicies | Where-Object { $_.displayName -eq $displayName }
+    if ($existing) {
+        Write-HydrationLog -Message "Skipping '$displayName' - already exists" -Level Info
+        $results += New-HydrationResult -Name $displayName -Type $resourceType -Action 'Skipped' -Status 'Already exists'
+        return $results
+    }
 
-        # Resolve gallery image by display name
-        if ($template.imageDisplayName -and $template.imageType -eq 'gallery') {
-            $matchingImage = $galleryImages.value | Where-Object { $_.displayName -like "*$($template.imageDisplayName)*" } | Select-Object -First 1
-            if ($matchingImage) {
-                $template | Add-Member -NotePropertyName 'imageId' -NotePropertyValue $matchingImage.id -Force
-            }
-            $template.PSObject.Properties.Remove('imageDisplayName')
+    # Resolve gallery image by display name
+    if ($template.imageDisplayName -and $template.imageType -eq 'gallery') {
+        $matchingImage = $galleryImages.value | Where-Object { $_.displayName -like "*$($template.imageDisplayName)*" } | Select-Object -First 1
+        if ($matchingImage) {
+            $template | Add-Member -NotePropertyName 'imageId' -NotePropertyValue $matchingImage.id -Force
         }
+        $template.PSObject.Properties.Remove('imageDisplayName')
+    }
 
-        # Add hydration kit marker
-        if ($template.description) {
-            $template.description = "$($template.description) Imported by Intune-Hydration-Kit"
-        }
-        else {
-            $template | Add-Member -NotePropertyName 'description' -NotePropertyValue 'Imported by Intune-Hydration-Kit'
-        }
+    # Add hydration kit marker if not already present
+    if ($template.description -and $template.description -notlike '*Intune-Hydration-Kit*') {
+        $template.description = "$($template.description) Imported by Intune-Hydration-Kit"
+    }
+    elseif (-not $template.description) {
+        $template | Add-Member -NotePropertyName 'description' -NotePropertyValue 'Imported by Intune-Hydration-Kit'
+    }
 
-        # Create policy
-        if ($PSCmdlet.ShouldProcess($displayName, 'Create')) {
-            try {
-                $body = $template | Remove-ReadOnlyGraphProperties | ConvertTo-Json -Depth 10
-                Invoke-MgGraphRequest -Method POST -Uri $endpoint -Body $body -ErrorAction Stop
-                $results += New-HydrationResult -Name $displayName -Type $resourceType -Action 'Created' -Status 'Success'
-                Write-HydrationLog -Message "Created provisioning policy '$displayName'" -Level Success
-            }
-            catch {
-                $errorMessage = Get-GraphErrorMessage $_
-                $results += New-HydrationResult -Name $displayName -Type $resourceType -Action 'Failed' -Status $errorMessage
-                Write-HydrationLog -Message "Failed to create '$displayName': $errorMessage" -Level Error
-            }
+    # Create policy
+    if ($PSCmdlet.ShouldProcess($displayName, 'Create')) {
+        try {
+            $body = $template | Remove-ReadOnlyGraphProperties | ConvertTo-Json -Depth 10
+            Invoke-MgGraphRequest -Method POST -Uri $endpoint -Body $body -ErrorAction Stop
+            $results += New-HydrationResult -Name $displayName -Type $resourceType -Action 'Created' -Status 'Success'
+            Write-HydrationLog -Message "Created provisioning policy '$displayName'" -Level Success
         }
-        else {
-            $results += New-HydrationResult -Name $displayName -Type $resourceType -Action 'WouldCreate' -Status 'DryRun'
+        catch {
+            $errorMessage = Get-GraphErrorMessage $_
+            $results += New-HydrationResult -Name $displayName -Type $resourceType -Action 'Failed' -Status $errorMessage
+            Write-HydrationLog -Message "Failed to create '$displayName': $errorMessage" -Level Error
         }
+    }
+    else {
+        $results += New-HydrationResult -Name $displayName -Type $resourceType -Action 'WouldCreate' -Status 'DryRun'
     }
 
     return $results
